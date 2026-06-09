@@ -295,62 +295,64 @@ void _conectarTransmision() {
     super.dispose();
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Visor Remoto')),
       body: Stack(
         children: [
+          // 1. El video de fondo ocupando todo
           RTCVideoView(_remoteRenderer),
+          
+          // 2. La botonera flotando abajo de todo
           Positioned(
             bottom: 30,
-            left: 0,
-            right: 0,
-            child: Center(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 200), // Manera correcta en Flutter
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 1. El casillero flotante para escribir el código
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
-                    decoration: const InputDecoration(
-                      labelText: 'Ingresá el código de la cámara',
-                      labelStyle: TextStyle(color: Colors.white70),
-                      filled: true,
-                      fillColor: Colors.black54,
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.green, width: 2.0),
-                      ),
+            left: 24,
+            right: 24,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Casillero para escribir el código
+                TextField(
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                  decoration: const InputDecoration(
+                    labelText: 'Ingresá el código de la cámara',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.black54,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.blue, width: 2.0),
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _codigoVinculacion = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 15),
-                  // 2. Tu botón de siempre
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                    ),
-                    onPressed: () {
-                      _conectarTransmision();
-                    },
-                    child: const Text(
-                      'ENGANCHAR TRANSMISIÓN (Mundial)',
-                      style: TextStyle(color: Colors.white),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green, width: 2.0),
                     ),
                   ),
-                ],
-              ),
+                  onChanged: (value) {
+                    setState(() {
+                      _codigoVinculacion = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 15),
+                // Botón para conectar
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  ),
+                  onPressed: () {
+                    _conectarTransmision();
+                  },
+                  child: const Text(
+                    'ENGANCHAR TRANSMISIÓN (Mundial)',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
