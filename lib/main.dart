@@ -210,7 +210,7 @@ class PantallaVisor extends StatefulWidget {
 class _PantallaVisorState extends State<PantallaVisor> {
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   RTCPeerConnection? _peerConnection;
-  String _codigoVinculacion = ""; // Sin 'final' y vacía para poder escribirla;
+  String _codigoVinculacion = "";
 
   Map<String, dynamic> configuration = {
     'iceServers': [
@@ -229,65 +229,33 @@ class _PantallaVisorState extends State<PantallaVisor> {
     await _remoteRenderer.initialize();
   }
 
-  void _conectarConCamara() async {
-    _peerConnection = await createPeerConnection(configuration);
+  void _conectarTransmision() async {
+    if (_codigoVinculacion.isEmpty) return;
 
-    _peerConnection!.onTrack = (RTCTrackEvent event) {
-      if (event.streams.isNotEmpty) {
-        setState(() => _remoteRenderer.srcObject = event.streams[0]);
-      }
-    };
-
-    _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
-      FirebaseFirestore.instance
-          .collection('conexiones')
-          .doc(_codigoVinculacion)
-          .collection('visorCandidates')
-          .add(candidate.toMap());
-    };
-
-    // Buscar la oferta de la cámara en Firebase
+    // Acá corre tu lógica de Firebase para buscar el código
     var doc = await FirebaseFirestore.instance
         .collection('conexiones')
         .doc(_codigoVinculacion)
         .get();
+
     if (doc.exists) {
       var data = doc.data();
       var offer =
           RTCSessionDescription(data!['offer']['sdp'], data['offer']['type']);
       await _peerConnection!.setRemoteDescription(offer);
 
-      // Crear la respuesta (Answer) para avisarle a la cámara
-      RTCSessionDescription answer = await _peerConnection!.createAnswer();
+      var answer = await _peerConnection!.createAnswer();
       await _peerConnection!.setLocalDescription(answer);
 
-      // Subir la respuesta para que la cámara la lea
       await FirebaseFirestore.instance
           .collection('conexiones')
           .doc(_codigoVinculacion)
-          .update({'answer': answer.toMap()});
+          .update({
+        'answer': {'sdp': answer.sdp, 'type': answer.type}
+      });
     }
-
-    // Escuchar candidatos de la cámara
-    FirebaseFirestore.instance
-        .collection('conexiones')
-        .doc(_codigoVinculacion)
-        .collection('camaraCandidates')
-        .snapshots()
-        .listen((snapshot) {
-      for (var change in snapshot.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          var data = change.doc.data();
-          _peerConnection!.addCandidate(RTCIceCandidate(
-              data!['candidate'], data['sdpMid'], data['sdpMLineIndex']));
-        }
-      }
-    });
   }
 
-void _conectarTransmision() {
-    // Si tenías otra función para enganchar, la podés llamar acá adentro
-  }
   @override
   void dispose() {
     _remoteRenderer.dispose();
@@ -295,16 +263,13 @@ void _conectarTransmision() {
     super.dispose();
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Visor Remoto')),
       body: Stack(
         children: [
-          // 1. El video de fondo ocupando todo
           RTCVideoView(_remoteRenderer),
-          
-          // 2. La botonera flotando abajo de todo
           Positioned(
             bottom: 30,
             left: 24,
@@ -312,7 +277,6 @@ void _conectarTransmision() {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Casillero para escribir el código
                 TextField(
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
@@ -335,11 +299,11 @@ void _conectarTransmision() {
                   },
                 ),
                 const SizedBox(height: 15),
-                // Botón para conectar
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 15),
                   ),
                   onPressed: () {
                     _conectarTransmision();
@@ -356,3 +320,4 @@ void _conectarTransmision() {
       ),
     );
   }
+}
