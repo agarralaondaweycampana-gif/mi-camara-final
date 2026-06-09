@@ -210,7 +210,7 @@ class PantallaVisor extends StatefulWidget {
 class _PantallaVisorState extends State<PantallaVisor> {
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   RTCPeerConnection? _peerConnection;
-  final String _codigoVinculacion = "8844";
+  String _codigoVinculacion = ""; // Sin 'final' y vacía para poder escribirla;
 
   Map<String, dynamic> configuration = {
     'iceServers': [
@@ -285,6 +285,9 @@ class _PantallaVisorState extends State<PantallaVisor> {
     });
   }
 
+void _conectarTransmision() {
+    // Si tenías otra función para enganchar, la podés llamar acá adentro
+  }
   @override
   void dispose() {
     _remoteRenderer.dispose();
@@ -304,18 +307,51 @@ class _PantallaVisorState extends State<PantallaVisor> {
             left: 0,
             right: 0,
             child: Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 15)),
-                onPressed: _conectarConCamara,
-                child: const Text('ENGANCHAR TRANSMISIÓN (Mundial)'),
+            child: Container(
+              maxHeight: 180, // Le da espacio a las dos cosas
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 1. El casillero flotante para escribir el código
+                  TextField(
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                    decoration: const InputDecoration(
+                      labelText: 'Ingresá el código de la cámara',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.black54, // Fondo oscuro para que se lea sobre el video
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.green, width: 2.0),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _codigoVinculacion = value; // Guarda el código
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                  // 2. Tu botón de siempre
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    ),
+                    onPressed: () {
+                  // Llama directo a la lógica de enganchar
+                  _conectarTransmision(); 
+                },
+                    child: const Text(
+                      'ENGANCHAR TRANSMISIÓN (Mundial)',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ),
-          )
-        ],
-      ),
-    );
-  }
-}
+          ),
