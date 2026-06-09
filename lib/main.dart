@@ -232,11 +232,31 @@ class _PantallaVisorState extends State<PantallaVisor> {
   void _conectarTransmision() async {
     if (_codigoVinculacion.isEmpty) return;
 
-    // Acá corre tu lógica de Firebase para buscar el código
-    var doc = await FirebaseFirestore.instance
+    _peerConnection = await createPeerConnection(configuration);
+
+    // Escucha los candidatos ICE que genera el visor y los sube a Firebase
+    _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
+      FirebaseFirestore.instance
+          .collection('conexiones')
+          .doc(_codigoVinculacion)
+          .collection('visorCandidates')
+          .add(candidate.toMap());
+    };
+
+    // Escucha el video que viene de la cámara y lo manda a la pantalla
+    _peerConnection!.onTrack = (RTCTrackEvent event) {
+      if (event.track.kind == 'video') {
+        setState(() {
+          _remoteRenderer.srcObject = event.streams[0];
+        });
+      }
+    };
+
+    // Busca la oferta de la cámara
+    var docRef = FirebaseFirestore.instance
         .collection('conexiones')
-        .doc(_codigoVinculacion)
-        .get();
+        .doc(_codigoVinculacion);
+    var doc = await docRef.get();
 
     if (doc.exists) {
       var data = doc.data();
@@ -247,13 +267,24 @@ class _PantallaVisorState extends State<PantallaVisor> {
       var answer = await _peerConnection!.createAnswer();
       await _peerConnection!.setLocalDescription(answer);
 
-      await FirebaseFirestore.instance
-          .collection('conexiones')
-          .doc(_codigoVinculacion)
-          .update({
+      // Le sube la respuesta a la cámara
+      await docRef.update({
         'answer': {'sdp': answer.sdp, 'type': answer.type}
       });
     }
+
+    // Se queda escuchando por si la cámara agrega nuevos candidatos ICE
+    docRef.collection('camaraCandidates').snapshots().listen((snapshot) {
+      for (var change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added) {
+          var data = change.doc.data();
+          _peerConnection!.addCandidate(
+            RTCIceCandidate(
+                data!['candidate'], data['sdpMid'], data['sdpMLineIndex']),
+          );
+        }
+      }
+    });
   }
 
   @override
