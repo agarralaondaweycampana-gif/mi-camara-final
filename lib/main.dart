@@ -308,7 +308,7 @@ void _conectarTransmision() {
             right: 0,
             child: Center(
             child: Container(
-              maxHeight: 180, // Le da espacio a las dos cosas
+              constraints: const BoxConstraints(maxHeight: 200), // Manera correcta en Flutter
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -321,7 +321,7 @@ void _conectarTransmision() {
                       labelText: 'Ingresá el código de la cámara',
                       labelStyle: TextStyle(color: Colors.white70),
                       filled: true,
-                      fillColor: Colors.black54, // Fondo oscuro para que se lea sobre el video
+                      fillColor: Colors.black54,
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.blue, width: 2.0),
                       ),
@@ -331,7 +331,7 @@ void _conectarTransmision() {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _codigoVinculacion = value; // Guarda el código
+                        _codigoVinculacion = value;
                       });
                     },
                   ),
@@ -343,9 +343,8 @@ void _conectarTransmision() {
                       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                     ),
                     onPressed: () {
-                  // Llama directo a la lógica de enganchar
-                  _conectarTransmision(); 
-                },
+                      _conectarTransmision();
+                    },
                     child: const Text(
                       'ENGANCHAR TRANSMISIÓN (Mundial)',
                       style: TextStyle(color: Colors.white),
