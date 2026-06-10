@@ -243,9 +243,9 @@ class _PantallaVisorState extends State<PantallaVisor> {
           .add(candidate.toMap());
     };
 
-    // Escucha el video que viene de la cámara y lo manda a la pantalla
+    // Escucha todo lo que viene de la cámara y lo planta en la pantalla
     _peerConnection!.onTrack = (RTCTrackEvent event) {
-      if (event.track.kind == 'video') {
+      if (event.streams.isNotEmpty) {
         setState(() {
           _remoteRenderer.srcObject = event.streams[0];
         });
